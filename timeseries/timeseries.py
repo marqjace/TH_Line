@@ -183,6 +183,7 @@ filepaths = [
 def main():
     results, temp_transects, salt_transects = process_transects(filepaths)
 
+    #################### Temperature Anomaly Calculation ##################
     woa_temp_months = {
         '1': woa_temp.woa_temp_jan,
         '2': woa_temp.woa_temp_feb,
@@ -199,25 +200,7 @@ def main():
     }
 
     temp_anom = anomaly.temperature_anomaly(temp_transects, woa_temp_months)
-
-    ################## Plot Anomaly Transect ##################
-    # Xgrid, Ygrid = make_transect_grid()
-    # for transect_name, result in results.items():
-
-    #     plt.figure()
-    #     plt.contourf(
-    #         Xgrid,
-    #         Ygrid,
-    #         temp_anom[transect_name]['temp_anomaly'],  # use string key
-    #         cmap=cm.cm.balance,
-    #         vmin=-4,
-    #         vmax=4,
-    #     )
-    #     plt.gca().invert_yaxis()
-    #     plt.title(f"{temp_anom[transect_name]['mean_time'].values}")
-    #     plt.colorbar(label="Temperature Anomaly (°C)")
-    #     plt.show()
-
+    
     print('Creating a mean depth profile for each transect...')
     for transect, data in temp_anom.items():
         temp_anom[transect] = {
@@ -229,23 +212,11 @@ def main():
     min_time = min(v["mean_time"] for v in temp_anom.values())
     max_time = max(v["mean_time"] for v in temp_anom.values())
 
-    # ################## Plot Anomaly Profile ##################
-    # plt.figure()
-    # for transect, data in temp_anom.items():
-    #     plt.plot(data['profile'], depth, label=transect)
-    #     plt.gca().invert_yaxis()
-    #     plt.xlabel("Temperature anomaly (°C)")
-    #     plt.ylabel("Depth (m)")
-    #     plt.title(f"{transect} mean profile\n{temp_anom[transect]['mean_time']}")
-    #     plt.grid(True)
-    #     plt.show()
-
     # Create time vs depth grid for interpolation
     time_grid = np.arange(min_time, max_time, pd.Timedelta(days=30)) # Time grid: every 30 days
     depth_grid = np.arange(0, 1000, 5) # Depth grid: every 5 m
     Tgrid, Zgrid = np.meshgrid(time_grid, depth_grid) # Meshgrid
 
-    # ################## Temperature ##################
     times_temp = []
     depths_temp = []
     values_temp = []
@@ -298,27 +269,147 @@ def main():
     # Convert to Pandas DataFrame for rolling filters
     tanom_grid = pd.DataFrame(tanom_np, index=depth_grid_extended)
 
-    # Convert Pandas DataFrame to xarray.DataArray
-    tanom_xr = xr.DataArray(
-        tanom_grid.values,                 # the 2D data array
-        coords={
-            'depth': tanom_grid.index,    # depth is the index
-            'time': time_grid             # time is the columns
-        },
-        dims=['depth', 'time'],           # dimension names
-        name='temperature_anomaly'        # variable name
+    ###################### Salinity Anomaly Calculations ##################
+
+    woa_salt_months = {
+        '1': woa_salt.woa_salt_jan,
+        '2': woa_salt.woa_salt_feb,
+        '3': woa_salt.woa_salt_mar,
+        '4': woa_salt.woa_salt_apr,
+        '5': woa_salt.woa_salt_may,
+        '6': woa_salt.woa_salt_jun,
+        '7': woa_salt.woa_salt_jul,
+        '8': woa_salt.woa_salt_aug,
+        '9': woa_salt.woa_salt_sep,
+        '10': woa_salt.woa_salt_oct,
+        '11': woa_salt.woa_salt_nov,
+        '12': woa_salt.woa_salt_dec
+    }
+
+    salt_anom = anomaly.salinity_anomaly(salt_transects, woa_salt_months)
+    
+    print('Creating a mean depth profile for each transect...')
+    for transect, data in salt_anom.items():
+        salt_anom[transect] = {
+            "profile": np.nanmean(data['salt_anomaly'], axis=1),   # Creates a profile of the mean salinity anomaly values across depth
+            "mean_time": data['mean_time'],
+        }
+
+    depth = np.linspace(0,1000,200)
+    min_time = min(v["mean_time"] for v in salt_anom.values())
+    max_time = max(v["mean_time"] for v in salt_anom.values())
+
+    # Create time vs depth grid for interpolation
+    time_grid = np.arange(min_time, max_time, pd.Timedelta(days=30)) # Time grid: every 30 days
+    depth_grid = np.arange(0, 1000, 5) # Depth grid: every 5 m
+    Tgrid, Zgrid = np.meshgrid(time_grid, depth_grid) # Meshgrid
+
+    times_temp = []
+    depths_temp = []
+    values_temp = []
+
+    for v in salt_anom.values():
+        t = v["mean_time"]
+        profile = v["profile"]
+        times_temp.extend([t] * len(profile))
+        depths_temp.extend(depth)
+        values_temp.extend(profile)
+
+    # Convert to numpy.datetime64
+    times_Salt = np.array([np.datetime64(t) for t in times_temp])
+    depths_Salt = np.array(depths_temp)
+    values_Salt = np.array(values_temp)
+
+    # Numeric times for griddata
+    times_numeric_Salt = (times_Salt - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 'D')
+    Tgrid_numeric_Salt = (Tgrid - np.datetime64('1970-01-01')) / np.timedelta64(1, 'D')
+    Zgrid_numeric_Salt = Zgrid.astype(float)
+
+    # Linear interpolation onto grid
+    sanom_grid = griddata(
+        points=(times_numeric_Salt, depths_Salt),
+        values=values_Salt,
+        xi=(Tgrid_numeric_Salt, Zgrid_numeric_Salt),
+        method='linear'
     )
 
-    tanom_xr.attrs['units'] = '°C'
-    tanom_xr.attrs['description'] = 'Interpolated temperature anomaly for Trinidad Head transects'
+    # Pull out surface values
+    surface = sanom_grid[0, :]
 
-    tanom_xr['depth'].attrs['units'] = 'm'
+    # Create artificial layers at -5m and -10m depth
+    surface_5m = surface.copy()
+    surface_10m = surface.copy()
+
+    # Stack above surface
+    sanom_np = np.vstack([
+        surface_10m,
+        surface_5m,
+        sanom_grid
+    ])
+
+    # Extend depth grid
+    depth_grid_extended = np.concatenate(([-10, -5], depth_grid))
+
+    # Replace surface with 5 m values
+    sanom_np[2, :] = sanom_np[3, :]
+
+    # Convert to Pandas DataFrame for rolling filters
+    sanom_grid = pd.DataFrame(sanom_np, index=depth_grid_extended)
+
+    ############### Save as xarray Dataset #################
+
+    # Create xarray Dataset
+    anom_ds = xr.Dataset(
+        data_vars={
+            'temperature_anomaly': (
+                ['depth', 'time'],
+                tanom_grid.values,
+                {
+                    'units': '°C',
+                    'description': 'Interpolated temperature anomaly'
+                },
+            ),
+            'salinity_anomaly': (
+                ['depth', 'time'],
+                sanom_grid.values,
+                {
+                    'units': 'PSU',
+                    'description': 'Interpolated salinity anomaly'
+                },
+            )
+        },
+        coords={
+            'depth': (
+                'depth',
+                tanom_grid.index,
+                {
+                    'units': 'meters',
+                    'description': 'Gridded depth below sea surface (5 m bins)',
+                }
+            ),
+            'time': (
+                'time',
+                time_grid,
+                {
+                    'units': 'datetime64[ns]',
+                    'description': 'Gridded time (30 day intervals)'
+                }
+            )
+        },
+        attrs={
+            'title': 'Gridded Trinidad Head Temperature Anomaly Time Series Dataset',
+            'source': 'Seaglider transects processed by Oregon State University Glider Research Group',
+            'created_on': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'contact': 'Jace Marquardt (jace.marquardt@oregonstate.edu)',
+            'references': 'World Ocean Atlas 2018 Temperature Data'
+        }
+    )
 
     data_path = r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\Repositories\TH_Line\timeseries\data'
     if not os.path.isdir(data_path):
         os.makedirs(data_path)
     output_file = os.path.join(data_path, 'tanom_timeseries_data.nc')
-    tanom_xr.to_netcdf(output_file)
+    anom_ds.to_netcdf(output_file)
 
     print(f"Saved temperature anomaly grid to {output_file}")
 
