@@ -4,10 +4,8 @@ import xarray as xr
 import numpy as np
 from datetime import datetime
 from scipy.interpolate import griddata
-import woa_temp
-import woa_salt
-import anomaly
-from transects_func import process_transects
+from utils import woa_temp, woa_salt, anomaly
+from utils.transects_func import process_transects
 
 filepaths = [
 
