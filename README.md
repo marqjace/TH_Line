@@ -19,4 +19,9 @@ To run:</br>
 `cd .\transects\`</br>
 `uv run .\plot_anomaly_transect.py`
 
+**merge_seaglider_data.py** -> Merges per dive NetCDF files into a single NetCDF.
+To run:</br>
+`cd .\transects\`</br>
+`uv run .\merge_seaglider_data.py`
+
 _Dependencies listed in .\transects\pyproject.toml_

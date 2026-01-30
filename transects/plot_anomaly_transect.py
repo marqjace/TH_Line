@@ -1,7 +1,3 @@
-# anomaly_transect.py
-# Created by: Jace Marquardt
-# Date Created: January 29, 2026
-
 import os
 import numpy as np
 import xarray as xr
