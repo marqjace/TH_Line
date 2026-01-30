@@ -11,8 +11,6 @@ filepaths = [
 
     # Nov 2014 Deployment
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2014/transect1/12_14_a_merged.nc',
-    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2014/transect1/12_14_a_merged.nc',
-    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2014/transect1/12_14_a_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2014/transect2/12_14_b_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2014/transect3/1_15_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2014/transect4/2_15_a_merged.nc',
@@ -171,8 +169,6 @@ filepaths = [
     # Nov 2025 Deployment
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect1/11_25_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect2_b/12_25_b_merged.nc',
-    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect3/1_26_merged.nc',
-    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect3/1_26_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect3/1_26_merged.nc',
 ]
 
