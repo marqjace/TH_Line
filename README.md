@@ -10,7 +10,7 @@ To run:</br>
 `cd .\timeseries\`</br>
 `uv run .\plot_timeseries.py`
 
-_Dependencies listed in `.\timeseries\pyproject.toml`_
+_Dependencies listed in .\timeseries\pyproject.toml_
 
 # Transects
 
@@ -19,4 +19,4 @@ To run:</br>
 `cd .\transects\`</br>
 `uv run .\plot_anomaly_transect.py`
 
-_Dependencies listed in `.\transects\pyproject.toml`_
+_Dependencies listed in .\transects\pyproject.toml_
