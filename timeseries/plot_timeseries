@@ -3,11 +3,10 @@ import xarray as xr
 from datetime import datetime
 from matplotlib import colors
 import matplotlib.pyplot as plt
-from transects_func import process_transects
 
 def main():
 
-    filepath = r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\Repositories\TH_Line\timeseries\data\tanom_timeseries_data_TEST.nc'
+    filepath = r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\Repositories\TH_Line\timeseries\data\tanom_timeseries_data.nc'
         
     ds = xr.open_dataset(filepath)
     ds = ds.sortby('time')

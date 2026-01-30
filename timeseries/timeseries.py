@@ -354,6 +354,7 @@ def main():
     # Convert to Pandas DataFrame for rolling filters
     sanom_grid = pd.DataFrame(sanom_np, index=depth_grid_extended)
 
+
     ############### Save as xarray Dataset #################
 
     # Create xarray Dataset
@@ -405,173 +406,10 @@ def main():
     data_path = r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\Repositories\TH_Line\timeseries\data'
     if not os.path.isdir(data_path):
         os.makedirs(data_path)
-    output_file = os.path.join(data_path, 'tanom_timeseries_data.nc')
+    output_file = os.path.join(data_path, 'timeseries_anomaly.nc')
     anom_ds.to_netcdf(output_file)
 
     print(f"Saved temperature anomaly grid to {output_file}")
-
-
-    # print('Applying a 3-month boxcar filter...')
-    # tanom_grid_box = tanom_grid.T.rolling(window=3, center=True, win_type='boxcar').mean() # Boxcar Filter every 3 transects (90 days)
-    # tanom_grid_box = tanom_grid_box.T.rolling(window=4, center=True, win_type='boxcar').mean() # Boxcar Filter every 4 x 5m (20m)
-
-    # # Set boundaries and levels for plotting
-    # boundaries_temp = [-4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]
-    # levels_temp = [-4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]
-    # divnorm_temp=colors.TwoSlopeNorm(vcenter=0., vmin=-4, vmax=4)
-
-
-
-    # # ################## Salinity ##################
-
-    # woa_salt_months = {
-    #     '1': woa_salt.woa_salt_jan,
-    #     '2': woa_salt.woa_salt_feb,
-    #     '3': woa_salt.woa_salt_mar,
-    #     '4': woa_salt.woa_salt_apr,
-    #     '5': woa_salt.woa_salt_may,
-    #     '6': woa_salt.woa_salt_jun,
-    #     '7': woa_salt.woa_salt_jul,
-    #     '8': woa_salt.woa_salt_aug,
-    #     '9': woa_salt.woa_salt_sep,
-    #     '10': woa_salt.woa_salt_oct,
-    #     '11': woa_salt.woa_salt_nov,
-    #     '12': woa_salt.woa_salt_dec
-    # }
-
-    # salt_anom = anomaly.salinity_anomaly(salt_transects, woa_salt_months)
-
-    # for transect, data in salt_anom.items():
-    #     salt_anom[transect] = {
-    #         "profile": np.nanmean(data['salt_anomaly'], axis=1),   # Creates a profile of the mean salinity anomaly values across depth
-    #         "mean_time": data['mean_time'],
-    #     }
-
-    # times_salt = []
-    # depths_salt = []
-    # values_salt = []
-
-    # for v in salt_anom.values():
-    #     t = v["mean_time"]
-    #     profile = v["profile"]
-    #     times_salt.extend([t] * len(profile))
-    #     depths_salt.extend(depth)
-    #     values_salt.extend(profile)
-
-    # # Convert to numpy.datetime64
-    # times_Salt = np.array([np.datetime64(t) for t in times_salt])
-    # depths_Salt = np.array(depths_salt)
-    # values_Salt = np.array(values_salt)
-
-    # # Numeric times for griddata
-    # times_numeric_salt = (times_Salt - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 'D')
-    # Tgrid_numeric_salt = (Tgrid - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 'D')
-    # Zgrid_numeric_salt = Zgrid.astype(float)
-
-    # # Linear interpolation onto grid
-    # sanom_grid = griddata(
-    #     points=(times_numeric_salt, depths_Salt),
-    #     values=values_Salt,
-    #     xi=(Tgrid_numeric_salt, Zgrid),
-    #     method='linear'
-    # )
-
-    # # Pull out surface values
-    # surface = sanom_grid[1, :]
-
-    # # Create artificial layers at -5m and -10m depth
-    # surface_5m = surface.copy()
-    # surface_10m = surface.copy()
-
-    # # Stack above surface
-    # sanom_np = np.vstack([
-    #     surface_10m,
-    #     surface_5m,
-    #     sanom_grid
-    # ])
-
-    # # Extend depth grid
-    # depth_grid_extended = np.concatenate(([-10, -5], depth_grid))
-
-    # # Replace surface with 5 m values
-    # sanom_np[2, :] = sanom_np[3, :]
-
-    # # Convert to Pandas DataFrame for rolling filters
-    # sanom_grid = pd.DataFrame(sanom_np, index=depth_grid_extended)
-
-    # print('Applying a 3-month boxcar filter...')
-    # sanom_grid_box = sanom_grid.T.rolling(window=3, center=True, win_type='boxcar').mean() # Boxcar Filter every 3 transects (90 days)
-    # sanom_grid_box = sanom_grid_box.T.rolling(window=4, center=True, win_type='boxcar').mean() # Boxcar Filter every 4 x 5m (20m)
-
-    # # Set boundaries and levels for plotting
-    # boundaries_salt = [-.6, -.4, -.2, 0, .2, .4, .6]
-    # levels_salt = [-.6, -.4, -.2, .2, .4, .6]
-    # divnorm_salt=colors.TwoSlopeNorm(vcenter=0., vmin=-.75, vmax=.75)
-
-    # # Calculate current timestamp
-    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") # Timestamp for file naming
-
-    # # Create figures directory if it doesn't exist
-    # figures_directory = f'C:/Users/marqjace/OneDrive - Oregon State University/Desktop/Python/TH-Line_timeseries/developing/figures/'
-    # if not os.path.isdir(figures_directory):
-    #     os.makedirs(figures_directory, exist_ok=True)
-
-    # # Plots
-    # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14,8), dpi=300)
-
-    # plot1 = ax1.contourf(time_grid, depth_grid_extended, tanom_grid_box, cmap='RdYlBu_r', norm=divnorm_temp, levels=boundaries_temp)
-    # lines1 = ax1.contour(time_grid, depth_grid_extended, tanom_grid_box, colors='black', norm=divnorm_temp, levels=levels_temp, alpha=0.75)
-
-    # ax1.clabel(lines1, lines1.levels, inline=True, fontsize=10)
-    # ax1.invert_yaxis()
-    # ax1.set_yticks((0, 200, 400, 600))
-    # ax1.set_ylim(600, 0)
-    # ax1.set_xlabel('Time')
-    # ax1.set_ylabel('Depth (m)')
-    # ax1.spines[:].set_linewidth(2)
-    # ax1.tick_params(width=2, top=True, right=True, direction='in')
-    # ax1.set_title('Trinidad Head Averaged Over Inshore 200km (Filtered)', pad=10)
-    # cbar1 = plt.colorbar(plot1, shrink=0.5, location='right', pad=0.015)
-    # cbar1.outline.set_linewidth(2)
-    # cbar1.set_label(label=r'($\degree$C)', rotation=0, labelpad=10)
-
-    # plot2 = ax2.contourf(time_grid, depth_grid_extended, sanom_grid_box, cmap='BrBG_r', norm=divnorm_salt, levels=boundaries_salt)
-    # lines2 = ax2.contour(time_grid, depth_grid_extended, sanom_grid_box, colors='black', norm=divnorm_salt, levels=levels_salt, alpha=0.75)
-
-    # ax2.clabel(lines2, lines2.levels, inline=True, fontsize=10)
-    # ax2.invert_yaxis()
-    # ax2.set_yticks((0, 200, 400, 600))
-    # ax2.set_ylim(600, 0)
-    # ax2.set_xlabel('Time')
-    # ax2.set_ylabel('Depth (m)')
-    # ax2.spines[:].set_linewidth(2)
-    # ax2.tick_params(width=2, top=True, right=True, direction='in')
-    # cbar2 = plt.colorbar(plot2, shrink=0.5, location='right', pad=0.015)
-    # cbar2.outline.set_linewidth(2)
-    # cbar2.set_label(label=r'(PSU)', rotation=0, labelpad=10)
-
-    # plt.tight_layout()
-    # plt.savefig(os.path.join(figures_directory, f't_anom_timeseries_{timestamp}.png'))
-
-    # # deployment_nov_14 = ax.hlines(y=570, xmin=datetime(2014,12,4).toordinal(), xmax=datetime(2015,3,9).toordinal(), color='k')
-    # # deployment_mar_15 = ax.hlines(y=570, xmin=datetime(2015,3,9).toordinal(), xmax=datetime(2015,9,17).toordinal(), color='k')
-    # # deployment_sep_15 = ax.hlines(y=570, xmin=datetime(2015,9,17).toordinal(), xmax=datetime(2016,5,16).toordinal(), color='k')
-    # # deployment_may_16 = ax.hlines(y=570, xmin=datetime(2016,5,23).toordinal(), xmax=datetime(2016,10,21).toordinal(), color='k')
-    # # deployment_oct_16 = ax.hlines(y=570, xmin=datetime(2016,10,21).toordinal(), xmax=datetime(2017,6,5).toordinal(), color='k')
-    # # deployment_jun_17 = ax.hlines(y=570, xmin=datetime(2017,6,5).toordinal(), xmax=datetime(2017,11,6).toordinal(), color='k')
-    # # deployment_apr_18 = ax.hlines(y=570, xmin=datetime(2018,4,17).toordinal(), xmax=datetime(2018,10,2).toordinal(), color='k')
-    # # deployment_nov_18 = ax.hlines(y=570, xmin=datetime(2018,11,7).toordinal(), xmax=datetime(2019,4,9).toordinal(), color='k')
-    # # deployment_apr_19 = ax.hlines(y=570, xmin=datetime(2019,4,9).toordinal(), xmax=datetime(2019,8,19).toordinal(), color='k')
-    # # deployment_sep_19 = ax.hlines(y=570, xmin=datetime(2019,9,16).toordinal(), xmax=datetime(2020,3,19).toordinal(), color='k')
-    # # deployment_sep_20 = ax.hlines(y=570, xmin=datetime(2020,9,16).toordinal(), xmax=datetime(2021,2,6).toordinal(), color='k')
-    # # deployment_nov_21 = ax.hlines(y=570, xmin=datetime(2021,11,12).toordinal(), xmax=datetime(2022,6,16).toordinal(), color='k')
-    # # deployment_jul_22 = ax.hlines(y=570, xmin=datetime(2022,7,29).toordinal(), xmax=datetime(2023,1,26).toordinal(), color='k')
-    # # deployment_jan_23 = ax.hlines(y=570, xmin=datetime(2023,1,26).toordinal(), xmax=datetime(2023,8,14).toordinal(), color='k')
-    # # deployment_oct_23 = ax.hlines(y=570, xmin=datetime(2023,10,13).toordinal(), xmax=datetime(2024,4,12).toordinal(), color='k')
-    # # deployment_apr_24 = ax.hlines(y=570, xmin=datetime(2024,4,12).toordinal(), xmax=datetime(2024,8,9).toordinal(), color='k')
-    # # deployment_oct_24 = ax.hlines(y=570, xmin=datetime(2024,10,21).toordinal(), xmax=datetime(2024,12,4).toordinal(), color='k')
-    # # deployment_mar_25 = ax.hlines(y=570, xmin=datetime(2025,3,21).toordinal(), xmax=datetime(2025,11,11).toordinal(), color='k')
-    # # deployment_nov_25 = ax.hlines(y=570, xmin=datetime(2025,11,11).toordinal(), xmax=datetime(2026,1,20).toordinal(), color='k')
 
 
 if __name__ == "__main__":
