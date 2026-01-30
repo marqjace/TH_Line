@@ -16,6 +16,8 @@ To run:</br>
 
 _Dependencies listed in .\timeseries\pyproject.toml_
 
+---
+
 # Transects
 
 ## plot_anomaly_transect.py
