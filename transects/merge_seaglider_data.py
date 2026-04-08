@@ -2,8 +2,8 @@ import glidertools as gt
 
 def main():
 
-    filenames = r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect3/p686*.nc'
-    output_filename = r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect3/1_26_merged.nc'
+    filenames = r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect1/p266*.nc'
+    output_filename = r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect1/3_26_merged.nc'
 
     # Load Variables
     gt.load.seaglider_show_variables(filenames)
@@ -32,7 +32,7 @@ def main():
     print(ds_dict.keys())
 
     # Rename Variables
-    ctd_data_point = ds_dict['sg_data_point']
+    ctd_data_point = ds_dict['ctd_data_point']
 
     if 'salinity_corrected' in ctd_data_point:
         dat = ctd_data_point.rename({

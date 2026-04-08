@@ -6,6 +6,8 @@ from datetime import datetime
 from scipy.interpolate import griddata
 from utils import woa_temp, woa_salt, anomaly
 from utils.transects_func import process_transects
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 filepaths = [
 
@@ -144,9 +146,9 @@ filepaths = [
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect1/4_24_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect2/5_24_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect3/6_24_merged.nc',
-    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect4/7_24_merged.nc',
-    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect5/8_24_a_merged.nc',
-    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect6/8_24_b_merged.nc',
+    # r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect4/7_24_merged.nc', # Bad salinity data
+    # r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect5/8_24_a_merged.nc', # Bad salinity data
+    # r'C:/Users/marqjace/data/seaglider/TH_line/deployments/apr_2024/transect6/8_24_b_merged.nc', # Bad salinity data
 
     # Oct 2024 Deployment
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/oct_2024/transect1/10_24_merged.nc',
@@ -170,6 +172,11 @@ filepaths = [
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect1/11_25_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect2_b/12_25_b_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect3/1_26_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect4/2_26_a_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect5/2_26_b_merged.nc',
+
+    # Mar 2026 Deployment
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect1/3_26_merged.nc',
 ]
 
 def main():
@@ -205,7 +212,11 @@ def main():
     max_time = max(v["mean_time"] for v in temp_anom.values())
 
     # Create time vs depth grid for interpolation
-    time_grid = np.arange(min_time, max_time, pd.Timedelta(days=30)) # Time grid: every 30 days
+    time_grid = pd.date_range(
+        start=min_time,
+        end=max_time,
+        freq='30D'
+    )
     depth_grid = np.arange(0, 1000, 5) # Depth grid: every 5 m
     Tgrid, Zgrid = np.meshgrid(time_grid, depth_grid) # Meshgrid
 
@@ -261,6 +272,7 @@ def main():
     # Convert to Pandas DataFrame for rolling filters
     tanom_grid = pd.DataFrame(tanom_np, index=depth_grid_extended)
 
+
     ###################### Salinity Anomaly Calculations ##################
 
     woa_salt_months = {
@@ -292,7 +304,11 @@ def main():
     max_time = max(v["mean_time"] for v in salt_anom.values())
 
     # Create time vs depth grid for interpolation
-    time_grid = np.arange(min_time, max_time, pd.Timedelta(days=30)) # Time grid: every 30 days
+    time_grid = pd.date_range(
+        start=min_time,
+        end=max_time,
+        freq='30D'
+    )
     depth_grid = np.arange(0, 1000, 5) # Depth grid: every 5 m
     Tgrid, Zgrid = np.meshgrid(time_grid, depth_grid) # Meshgrid
 

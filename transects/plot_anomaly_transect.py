@@ -17,8 +17,8 @@ def main():
     ################### WOA #####################
 
     # Open WOA Climatology Dataset and Select the TH Line transect
-    ds1 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\temperature\woa18_decav_t01_04.nc', decode_times=False)
-    ds2 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\salinity\woa18_decav_s01_04.nc', decode_times=False)
+    ds1 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\temperature\woa18_decav_t03_04.nc', decode_times=False)
+    ds2 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\salinity\woa18_decav_s03_04.nc', decode_times=False)
     # ds = xr.open_dataset(r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\woa18_decav_t01_01.nc', decode_times=False)
     # ^ Example using the January decadal average dataset 'woa18_decav_t01_01.nc'
 
@@ -73,7 +73,7 @@ def main():
     ygrid = np.linspace(ymin, ymax, yn)
     Xgrid, Ygrid = np.meshgrid(xgrid, ygrid)
 
-    dat = xr.open_dataset(r'C:/Users/marqjace/data/seaglider/TH_line/deployments/nov_2025/transect3/1_26_merged.nc', decode_times=False)
+    dat = xr.open_dataset(r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect1/3_26_merged.nc', decode_times=False)
 
     mask = ~np.isnan(dat.temp_raw) & ~np.isnan(dat.salt_raw)
     dat = dat.where(mask, drop=True)
@@ -139,7 +139,7 @@ def main():
     yfill = norm.pdf(x, loc=y)
     ax1.fill_between(x, yfill, color='gray')
     ax1.invert_yaxis()
-    ax1.set_title(f'TH Line - SG686 - {time_start} - {time_end}', fontsize='large', fontweight='semibold', pad=10)
+    ax1.set_title(f'TH Line - SG266 - {time_start} - {time_end}', fontsize='large', fontweight='semibold', pad=10)
     # ax1.set_title(f'TH Line - SG266 - 13 August 2024 - 25 August 2024', fontsize='large', fontweight='semibold', pad=10)
     ax1.set_ylabel('Depth (m)')
     ax1.set_xticks((-124, -124.5, -125, -125.5, -126, -126.5, -127, -127.5, -128, -128.5, -129))
@@ -175,7 +175,7 @@ def main():
     twin2.spines[:].set_linewidth(2)
     twin2.set_xlabel('Distance (km)', labelpad=-35)
 
-    plt.savefig(os.path.join(figures_dir, f'TH_line_SG686_T_anom.png'), bbox_inches='tight')
+    plt.savefig(os.path.join(figures_dir, f'TH_line_SG266_T_anom.png'), bbox_inches='tight')
 
 
     ################### S-Anom Plot #####################
@@ -189,7 +189,7 @@ def main():
     yfill = norm.pdf(x, loc=y)
     ax1.fill_between(x, yfill, color='gray')
     ax1.invert_yaxis()
-    ax1.set_title(f'TH Line - SG686 - {time_start} - {time_end}', fontsize='large', fontweight='semibold', pad=10)
+    ax1.set_title(f'TH Line - SG266 - {time_start} - {time_end}', fontsize='large', fontweight='semibold', pad=10)
     # ax1.set_title(f'TH Line - SG686 - 13 August 2024 - 25 August 2024', fontsize='large', fontweight='semibold', pad=10)
     ax1.set_ylabel('Depth (m)')
     ax1.set_xticks((-124, -124.5, -125, -125.5, -126, -126.5, -127, -127.5, -128, -128.5, -129))
@@ -225,7 +225,7 @@ def main():
     twin2.spines[:].set_linewidth(2)
     twin2.set_xlabel('Distance (km)', labelpad=-35)
 
-    plt.savefig(os.path.join(figures_dir, f'TH_line_SG686_S_anom.png'), bbox_inches='tight')
+    plt.savefig(os.path.join(figures_dir, f'TH_line_SG266_S_anom.png'), bbox_inches='tight')
 
 
 if __name__ == "__main__":
