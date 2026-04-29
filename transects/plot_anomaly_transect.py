@@ -17,8 +17,8 @@ def main():
     ################### WOA #####################
 
     # Open WOA Climatology Dataset and Select the TH Line transect
-    ds1 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\temperature\woa18_decav_t03_04.nc', decode_times=False)
-    ds2 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\salinity\woa18_decav_s03_04.nc', decode_times=False)
+    ds1 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\temperature\woa18_decav_t04_04.nc', decode_times=False)
+    ds2 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\salinity\woa18_decav_s04_04.nc', decode_times=False)
     # ds = xr.open_dataset(r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\woa18_decav_t01_01.nc', decode_times=False)
     # ^ Example using the January decadal average dataset 'woa18_decav_t01_01.nc'
 
@@ -26,16 +26,16 @@ def main():
     ds1 = ds1.sel(lat=41.625, lon=slice(-129.375, -124.375), depth=slice(0,1000))
     ds2 = ds2.sel(lat=41.625, lon=slice(-129.375, -124.375), depth=slice(0,1000))
 
-    # Name the variables
-    t_an1 = ds1['t_an'][0,:,:]  # Temperature
-    lon1 = ds1['lon']  # Longitude
-    lat1 = ds1['lat']  # Latitude
-    depth1 = ds1['depth']  # Depth
+    # # Name the variables
+    # t_an1 = ds1['t_an'][0,:,:]  # Temperature
+    # lon1 = ds1['lon']  # Longitude
+    # lat1 = ds1['lat']  # Latitude
+    # depth1 = ds1['depth']  # Depth
 
-    s_an2 = ds2['s_an'][0,:,:]  # Salinity
-    lon2 = ds2['lon']  # Longitude
-    lat2 = ds2['lat']  # Latitude
-    depth2 = ds2['depth']  # Depth
+    # s_an2 = ds2['s_an'][0,:,:]  # Salinity
+    # lon2 = ds2['lon']  # Longitude
+    # lat2 = ds2['lat']  # Latitude
+    # depth2 = ds2['depth']  # Depth
 
     # Define a new grid (112 points longitude, 200 points depth)
     z_new1 = np.arange(0,1000, 5)
@@ -73,7 +73,7 @@ def main():
     ygrid = np.linspace(ymin, ymax, yn)
     Xgrid, Ygrid = np.meshgrid(xgrid, ygrid)
 
-    dat = xr.open_dataset(r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect1/3_26_merged.nc', decode_times=False)
+    dat = xr.open_dataset(r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect2/4_26_merged.nc', decode_times=False)
 
     mask = ~np.isnan(dat.temp_raw) & ~np.isnan(dat.salt_raw)
     dat = dat.where(mask, drop=True)

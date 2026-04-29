@@ -196,7 +196,7 @@ def main():
     )
 
     plt.grid(alpha=0.8, which='major', axis='y')
-    plt.title('Temperature Anomaly Indices', pad=15, fontsize='xx-large')
+    plt.title('California Temperature Anomaly Indices', pad=15, fontsize='xx-large')
     fig.text(0.8, 0.025, f'Last Updated: {timestamp_print}', fontsize='large')
     fig.subplots_adjust(bottom=0.15)
 
@@ -267,7 +267,7 @@ def main():
     )
 
     plt.grid(alpha=0.8, which='major', axis='y')
-    plt.title('Temperature Anomaly Indices', pad=15, fontsize='xx-large')
+    plt.title('California Temperature Anomaly Indices', pad=15, fontsize='xx-large')
     fig.text(0.8, 0.025, f'Last Updated: {timestamp_print}', fontsize='large')
     fig.subplots_adjust(bottom=0.15)
 

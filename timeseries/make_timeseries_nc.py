@@ -177,6 +177,7 @@ filepaths = [
 
     # Mar 2026 Deployment
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect1/3_26_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect2/4_26_merged.nc',
 ]
 
 def main():
