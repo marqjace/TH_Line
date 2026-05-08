@@ -2,8 +2,8 @@ import glidertools as gt
 
 def main():
 
-    filenames = r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect2/p266*.nc'
-    output_filename = r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect2/4_26_merged.nc'
+    filenames = r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect3/p266*.nc'
+    output_filename = r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect3/5_26_merged.nc'
 
     # Load Variables
     gt.load.seaglider_show_variables(filenames)

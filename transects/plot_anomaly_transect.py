@@ -17,25 +17,12 @@ def main():
     ################### WOA #####################
 
     # Open WOA Climatology Dataset and Select the TH Line transect
-    ds1 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\temperature\woa18_decav_t04_04.nc', decode_times=False)
-    ds2 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\salinity\woa18_decav_s04_04.nc', decode_times=False)
-    # ds = xr.open_dataset(r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\woa18_decav_t01_01.nc', decode_times=False)
-    # ^ Example using the January decadal average dataset 'woa18_decav_t01_01.nc'
+    ds1 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\temperature\woa18_decav_t05_04.nc', decode_times=False)
+    ds2 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\salinity\woa18_decav_s05_04.nc', decode_times=False)
 
     # Select the extent of the TH Line 200km inshore (-126.5 to -124.5W longitude, 0-1000m depth)
     ds1 = ds1.sel(lat=41.625, lon=slice(-129.375, -124.375), depth=slice(0,1000))
     ds2 = ds2.sel(lat=41.625, lon=slice(-129.375, -124.375), depth=slice(0,1000))
-
-    # # Name the variables
-    # t_an1 = ds1['t_an'][0,:,:]  # Temperature
-    # lon1 = ds1['lon']  # Longitude
-    # lat1 = ds1['lat']  # Latitude
-    # depth1 = ds1['depth']  # Depth
-
-    # s_an2 = ds2['s_an'][0,:,:]  # Salinity
-    # lon2 = ds2['lon']  # Longitude
-    # lat2 = ds2['lat']  # Latitude
-    # depth2 = ds2['depth']  # Depth
 
     # Define a new grid (112 points longitude, 200 points depth)
     z_new1 = np.arange(0,1000, 5)
@@ -45,21 +32,13 @@ def main():
     ds_z_new1 = ds1.interp(depth=z_new1, lon=lon_new1)
     ds_z_new2 = ds2.interp(depth=z_new1, lon=lon_new1)
 
-    # Meshgrid the longitude and depth grid
-    Xgrid1, Ygrid1 = np.meshgrid(ds_z_new1['lon'], ds_z_new1['depth'])
-    Xgrid2, Ygrid2 = np.meshgrid(ds_z_new2['lon'], ds_z_new2['depth'])
+    # # Meshgrid the longitude and depth grid
+    # Xgrid1, Ygrid1 = np.meshgrid(ds_z_new1['lon'], ds_z_new1['depth'])
+    # Xgrid2, Ygrid2 = np.meshgrid(ds_z_new2['lon'], ds_z_new2['depth'])
 
     # Define new temperature variable dimensions. We only want longitude and depth
     ds_z_t_an1 = ds_z_new1['t_an'][0,:,:]
     ds_z_s_an2 = ds_z_new2['s_an'][0,:,:]
-
-    # print(f'Original Grid Shape VS New Grid Shape:\nOriginal temperature value shape: {t_an1.shape}\nGridded temperature value shape: {ds_z_t_an1.shape}')
-
-    # plt.contourf(Xgrid1, Ygrid1, ds_z_t_an1, cmap=cmocean.cm.thermal)
-    # plt.contourf(Xgrid2, Ygrid2, ds_z_s_an2, cmap=cmocean.cm.haline)
-    # plt.gca().invert_yaxis()
-    # plt.show()
-
 
     ################### Glider Data #####################
 
@@ -73,17 +52,17 @@ def main():
     ygrid = np.linspace(ymin, ymax, yn)
     Xgrid, Ygrid = np.meshgrid(xgrid, ygrid)
 
-    dat = xr.open_dataset(r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect2/4_26_merged.nc', decode_times=False)
+    dat = xr.open_dataset(r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect3/5_26_merged.nc', decode_times=False)
 
     mask = ~np.isnan(dat.temp_raw) & ~np.isnan(dat.salt_raw)
     dat = dat.where(mask, drop=True)
 
     # variable assignment for conveniant access
     depth = dat.depth
-    dives = dat.dives
-    latitude = dat.latitude
+    # dives = dat.dives
+    # latitude = dat.latitude
     longitude = dat.longitude
-    pres = dat.pressure
+    # pres = dat.pressure
     temp = dat.temp_raw
     salt = dat.salt_raw
     # oxy = dat.oxygen

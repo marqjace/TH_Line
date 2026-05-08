@@ -178,6 +178,7 @@ filepaths = [
     # Mar 2026 Deployment
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect1/3_26_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect2/4_26_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect3/5_26_merged.nc',
 ]
 
 def main():
@@ -407,7 +408,7 @@ def main():
         },
         attrs={
             'title': 'Gridded Trinidad Head Temperature Anomaly Time Series Dataset',
-            'source': 'Seaglider transects processed by Oregon State University Glider Research Group',
+            'source': 'Oregon State University Glider Research Group',
             'created_on': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'contact': 'Jace Marquardt (jace.marquardt@oregonstate.edu)',
             'references': 'World Ocean Atlas 2018 Temperature Data'

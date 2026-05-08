@@ -67,45 +67,86 @@ def transect(filepath, Xgrid, Ygrid):
 
     return out
 
-def process_transects(filepaths):
+def process_transects(
+    filepaths,
+    existing_times=None,
+    return_skipped=False,
+):
     """
     Process transects and create dictionaries of temperature and salinity.
-    
-    :param filepaths: Filepaths to merged transect netCDF files
-    
-    :return: Tuple of (results, temps, salts)
-        - results: Dictionary with keys as transect names and values as transect data
+
+    Parameters
+    ----------
+    filepaths : list of str
+        Filepaths to merged transect netCDF files
+    existing_times : set of np.datetime64 or pandas.Timestamp, optional
+        Transect mean_times that have already been processed
+    return_skipped : bool, optional
+        If True, also return list of skipped transects
+
+    Returns
+    -------
+    results : dict
+        Transect metadata keyed by transect name
+    temps : dict
+        Temperature profiles keyed by transect name
+    salts : dict
+        Salinity profiles keyed by transect name
+    skipped : list (optional)
+        List of skipped transect names
     """
+
+    if existing_times is None:
+        existing_times = set()
+
+    # Normalize times once for safe comparison
+    existing_times = {np.datetime64(t) for t in existing_times}
+
     Xgrid, Ygrid = make_transect_grid()
 
     results = {}
-    for i, fp in enumerate(filepaths, start=1):
-        # Extract the base filename without extension
-        base = os.path.basename(fp)          # '10_25_b_merged.nc'
-        name = base.split('_merged')[0]      # '10_25_b'
-        
-        print(f"Processing {i}/{len(filepaths)} {name}...")
-        results[name] = transect(fp, Xgrid, Ygrid)
+    skipped = []
 
-    # 
+    for i, fp in enumerate(filepaths, start=1):
+        base = os.path.basename(fp)
+        name = base.split("_merged")[0]
+
+        print(f"Processing {i}/{len(filepaths)} {name}...")
+
+        out = transect(fp, Xgrid, Ygrid)
+
+        transect_time = np.datetime64(out["mean_time"])
+
+        # -------- Incremental skip ----------
+        if transect_time in existing_times:
+            skipped.append(name)
+            continue
+        # ------------------------------------
+
+        results[name] = out
+
     temps = {
         k: {
-            "temp": v['temp_profile'],
-            "depth": Ygrid[:,0],
+            "temp": v["temp_profile"],
+            "depth": Ygrid[:, 0],
             "mean_time": v["mean_time"],
         }
         for k, v in results.items()
     }
+
     salts = {
-    k: {
-        "salt": v["salt_profile"],
-        "depth": Ygrid[:,0],
-        "mean_time": v["mean_time"],
-    }
-    for k, v in results.items()
+        k: {
+            "salt": v["salt_profile"],
+            "depth": Ygrid[:, 0],
+            "mean_time": v["mean_time"],
+        }
+        for k, v in results.items()
     }
 
-    print(f"Processing complete.\n")
+    print("Processing complete.\n")
+
+    if return_skipped:
+        return results, temps, salts, skipped
+
     return results, temps, salts
-
 
