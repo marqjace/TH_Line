@@ -3,6 +3,7 @@ import numpy as np
 import xarray as xr
 import cmocean
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from matplotlib import colors
 from scipy.stats import norm
 from scipy.interpolate import griddata
@@ -17,8 +18,8 @@ def main():
     ################### WOA #####################
 
     # Open WOA Climatology Dataset and Select the TH Line transect
-    ds1 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\temperature\woa18_decav_t05_04.nc', decode_times=False)
-    ds2 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\salinity\woa18_decav_s05_04.nc', decode_times=False)
+    ds1 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\temperature\woa18_decav_t09_04.nc', decode_times=False)
+    ds2 = xr.open_dataset(r'C:\Users\marqjace\data\seaglider\TH_line\woa_climatology_data\salinity\woa18_decav_s09_04.nc', decode_times=False)
 
     # Select the extent of the TH Line 200km inshore (-126.5 to -124.5W longitude, 0-1000m depth)
     ds1 = ds1.sel(lat=41.625, lon=slice(-129.375, -124.375), depth=slice(0,1000))
@@ -52,7 +53,7 @@ def main():
     ygrid = np.linspace(ymin, ymax, yn)
     Xgrid, Ygrid = np.meshgrid(xgrid, ygrid)
 
-    dat = xr.open_dataset(r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect3/5_26_merged.nc', decode_times=False)
+    dat = xr.open_dataset(r'C:/Users/marqjace/data/seaglider/TH_line/deployments/sep_2026/transect1/9_26_a_merged.nc', decode_times=False)
 
     mask = ~np.isnan(dat.temp_raw) & ~np.isnan(dat.salt_raw)
     dat = dat.where(mask, drop=True)
@@ -89,13 +90,10 @@ def main():
 
     # Set Colorbar and Contour Line Ranges
     boundaries_temp = [-4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]
-    levels_temp = [-4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]
     boundaries_salt = [-1, -.8, -.6, -.4, -.2, 0, .2, .4, .6, .8, 1]
-    levels_salt = [-1, -.8, -.6, -.4, -.2, .2, .4, .6, .8, 1]
-    boundaries_oxy = [0, 50, 100, 150, 200, 250, 300]
 
     divnorm_temp=colors.TwoSlopeNorm(vcenter=0., vmin=-4, vmax=4)
-    divnorm_salt=colors.TwoSlopeNorm(vcenter=0., vmin=-.75, vmax=.75)
+    divnorm_salt=colors.TwoSlopeNorm(vcenter=0., vmin=-1, vmax=1)
 
     anomaly = 'anomaly'
 
@@ -118,8 +116,7 @@ def main():
     yfill = norm.pdf(x, loc=y)
     ax1.fill_between(x, yfill, color='gray')
     ax1.invert_yaxis()
-    ax1.set_title(f'TH Line - SG266 - {time_start} - {time_end}', fontsize='large', fontweight='semibold', pad=10)
-    # ax1.set_title(f'TH Line - SG266 - 13 August 2024 - 25 August 2024', fontsize='large', fontweight='semibold', pad=10)
+    ax1.set_title(f'TH Line - SG686 - {time_start} - {time_end}', fontsize='large', fontweight='semibold', pad=10)
     ax1.set_ylabel('Depth (m)')
     ax1.set_xticks((-124, -124.5, -125, -125.5, -126, -126.5, -127, -127.5, -128, -128.5, -129))
     ax1.set_xticklabels(())
@@ -131,7 +128,7 @@ def main():
     twin1 = ax2.twiny()
     twin2 = ax2.twiny()
 
-    contour2 = twin1.contourf(Xgrid, Ygrid, t_anom, cmap='RdYlBu_r', norm=divnorm_temp, levels=boundaries_temp)
+    contour2 = twin1.pcolormesh(Xgrid, Ygrid, t_anom, cmap="bwr", norm=divnorm_temp, shading='nearest')
     plt.colorbar(contour2, label=r'T$_{anomaly}$ ($\degree$C)')
     bottom_topo2 = twin1.plot(x, y, c='gray')
 
@@ -154,7 +151,7 @@ def main():
     twin2.spines[:].set_linewidth(2)
     twin2.set_xlabel('Distance (km)', labelpad=-35)
 
-    plt.savefig(os.path.join(figures_dir, f'TH_line_SG266_T_anom.png'), bbox_inches='tight')
+    plt.savefig(os.path.join(figures_dir, f'TH_line_SG686_T_anom.png'), bbox_inches='tight')
 
 
     ################### S-Anom Plot #####################
@@ -168,8 +165,7 @@ def main():
     yfill = norm.pdf(x, loc=y)
     ax1.fill_between(x, yfill, color='gray')
     ax1.invert_yaxis()
-    ax1.set_title(f'TH Line - SG266 - {time_start} - {time_end}', fontsize='large', fontweight='semibold', pad=10)
-    # ax1.set_title(f'TH Line - SG686 - 13 August 2024 - 25 August 2024', fontsize='large', fontweight='semibold', pad=10)
+    ax1.set_title(f'TH Line - SG686 - {time_start} - {time_end}', fontsize='large', fontweight='semibold', pad=10)
     ax1.set_ylabel('Depth (m)')
     ax1.set_xticks((-124, -124.5, -125, -125.5, -126, -126.5, -127, -127.5, -128, -128.5, -129))
     ax1.set_xticklabels(())
@@ -181,7 +177,7 @@ def main():
     twin1 = ax2.twiny()
     twin2 = ax2.twiny()
 
-    contour2 = twin1.contourf(Xgrid, Ygrid, s_anom, cmap='BrBG_r', norm=divnorm_salt, levels=boundaries_salt)
+    contour2 = twin1.pcolormesh(Xgrid, Ygrid, s_anom, cmap='BrBG_r', norm=divnorm_salt, shading='nearest')
     plt.colorbar(contour2, label=r'S$_{anomaly}$ (PSU)')
     bottom_topo2 = twin1.plot(x, y, c='gray')
 
@@ -204,7 +200,7 @@ def main():
     twin2.spines[:].set_linewidth(2)
     twin2.set_xlabel('Distance (km)', labelpad=-35)
 
-    plt.savefig(os.path.join(figures_dir, f'TH_line_SG266_S_anom.png'), bbox_inches='tight')
+    plt.savefig(os.path.join(figures_dir, f'TH_line_SG686_S_anom.png'), bbox_inches='tight')
 
 
 if __name__ == "__main__":

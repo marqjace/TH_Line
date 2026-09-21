@@ -56,43 +56,99 @@ def main():
 
     ##################### Plot Timeseries #####################
     print(f'\nCreating figures....')
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14,8), dpi=300, constrained_layout=True)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(13,8), dpi=300, layout='constrained')
 
-    plot1 = ax1.contourf(time, depth, tanom_smoothed, cmap='RdYlBu_r', norm=divnorm_temp, levels=boundaries_temp)
+    plot1 = ax1.pcolormesh(time, depth, tanom_smoothed, cmap='bwr', norm=divnorm_temp, shading='nearest')
     lines1 = ax1.contour(time, depth, tanom_smoothed, colors='black', norm=divnorm_temp, levels=levels_temp, alpha=0.75)
+
+    dep_nov_14 = ax1.hlines(y=570, xmin=datetime(2014,12,4), xmax=datetime(2015,3,9), color='k')
+    dep_mar_15 = ax1.hlines(y=570, xmin=datetime(2015,3,9), xmax=datetime(2015,9,17), color='k')
+    dep_sep_15 = ax1.hlines(y=570, xmin=datetime(2015,9,17), xmax=datetime(2016,5,16), color='k')
+    dep_may_16 = ax1.hlines(y=570, xmin=datetime(2016,5,23), xmax=datetime(2016,10,21), color='k')
+    dep_oct_16 = ax1.hlines(y=570, xmin=datetime(2016,10,21), xmax=datetime(2017,6,5), color='k')
+    dep_jun_17 = ax1.hlines(y=570, xmin=datetime(2017,6,5), xmax=datetime(2017,11,6), color='k')
+    dep_apr_18 = ax1.hlines(y=570, xmin=datetime(2018,4,17), xmax=datetime(2018,10,2), color='k')
+    dep_nov_18 = ax1.hlines(y=570, xmin=datetime(2018,11,7), xmax=datetime(2019,4,9), color='k')
+    dep_apr_19 = ax1.hlines(y=570, xmin=datetime(2019,4,9), xmax=datetime(2019,8,19), color='k')
+    dep_sep_19 = ax1.hlines(y=570, xmin=datetime(2019,9,16), xmax=datetime(2020,3,19), color='k')
+    dep_sep_20 = ax1.hlines(y=570, xmin=datetime(2020,9,16), xmax=datetime(2021,2,6), color='k')
+    dep_nov_21 = ax1.hlines(y=570, xmin=datetime(2021,11,12), xmax=datetime(2022,6,16), color='k')
+    dep_jul_22 = ax1.hlines(y=570, xmin=datetime(2022,7,29), xmax=datetime(2023,1,26), color='k')
+    dep_jan_23 = ax1.hlines(y=570, xmin=datetime(2023,1,26), xmax=datetime(2023,8,14), color='k')
+    dep_oct_23 = ax1.hlines(y=570, xmin=datetime(2023,10,13), xmax=datetime(2024,4,12), color='k')
+    dep_apr_24 = ax1.hlines(y=570, xmin=datetime(2024,4,12), xmax=datetime(2024,8,9), color='k')
+    dep_oct_24 = ax1.hlines(y=570, xmin=datetime(2024,10,21), xmax=datetime(2024,12,4), color='k')
+    dep_mar_25 = ax1.hlines(y=570, xmin=datetime(2025,3,21), xmax=datetime(2025,11,11), color='k')
+    dep_nov_25 = ax1.hlines(y=570, xmin=datetime(2025,11,11), xmax=datetime(2026,2,25), color='k')
+    dep_mar_26 = ax1.hlines(y=570, xmin=datetime(2026,3,14), xmax=datetime(2026,8,27), color='k')
+    dep_sep_26 = ax1.hlines(y=570, xmin=datetime(2026,9,18), xmax=datetime.now(), color='k')
 
     ax1.clabel(lines1, lines1.levels, inline=True, fontsize=10)
     ax1.invert_yaxis()
     ax1.set_yticks((0, 200, 400, 600))
     ax1.set_ylim(600, 0)
     ax1.set_xlim(time.min(), time.max() + pd.Timedelta(30, unit='D'))
-    ax1.set_xlabel('Time')
-    ax1.set_ylabel('Depth (m)')
+    ax1.set_ylabel('Depth (m)', fontsize='large')
     ax1.spines[:].set_linewidth(2)
-    ax1.tick_params(width=2, top=True, right=True, direction='in')
-    ax1.set_title('Trinidad Head Averaged Over Inshore 200km (Filtered)', pad=10)
-    cbar1 = fig.colorbar(plot1, ax=ax1, pad=0.02, shrink=0.5)
+    ax1.tick_params(width=4, top=True, right=True, direction='in', labelsize=12)
+    cbar1 = fig.colorbar(plot1, ax=ax1, pad=0.02, shrink=0.75)
     cbar1.outline.set_linewidth(2)
     cbar1.set_label(label=r'($\degree$C)', rotation=0, labelpad=10)
 
-    plot2 = ax2.contourf(time, depth, sanom_smoothed, cmap='BrBG_r', norm=divnorm_salt, levels=boundaries_salt)
+    plot2 = ax2.pcolormesh(time, depth, sanom_smoothed, cmap='BrBG_r', norm=divnorm_salt, shading='nearest')
     lines2 = ax2.contour(time, depth, sanom_smoothed, colors='black', norm=divnorm_salt, levels=levels_salt, alpha=0.75)
+
+    dep2_nov_14 = ax2.hlines(y=570, xmin=datetime(2014,12,4), xmax=datetime(2015,3,9), color='k')
+    dep2_mar_15 = ax2.hlines(y=570, xmin=datetime(2015,3,9), xmax=datetime(2015,9,17), color='k')
+    dep2_sep_15 = ax2.hlines(y=570, xmin=datetime(2015,9,17), xmax=datetime(2016,5,16), color='k')
+    dep2_may_16 = ax2.hlines(y=570, xmin=datetime(2016,5,23), xmax=datetime(2016,10,21), color='k')
+    dep2_oct_16 = ax2.hlines(y=570, xmin=datetime(2016,10,21), xmax=datetime(2017,6,5), color='k')
+    dep2_jun_17 = ax2.hlines(y=570, xmin=datetime(2017,6,5), xmax=datetime(2017,11,6), color='k')
+    dep2_apr_18 = ax2.hlines(y=570, xmin=datetime(2018,4,17), xmax=datetime(2018,10,2), color='k')
+    dep2_nov_18 = ax2.hlines(y=570, xmin=datetime(2018,11,7), xmax=datetime(2019,4,9), color='k')
+    dep2_apr_19 = ax2.hlines(y=570, xmin=datetime(2019,4,9), xmax=datetime(2019,8,19), color='k')
+    dep2_sep_19 = ax2.hlines(y=570, xmin=datetime(2019,9,16), xmax=datetime(2020,3,19), color='k')
+    dep2_sep_20 = ax2.hlines(y=570, xmin=datetime(2020,9,16), xmax=datetime(2021,2,6), color='k')
+    dep2_nov_21 = ax2.hlines(y=570, xmin=datetime(2021,11,12), xmax=datetime(2022,6,16), color='k')
+    dep2_jul_22 = ax2.hlines(y=570, xmin=datetime(2022,7,29), xmax=datetime(2023,1,26), color='k')
+    dep2_jan_23 = ax2.hlines(y=570, xmin=datetime(2023,1,26), xmax=datetime(2023,8,14), color='k')
+    dep2_oct_23 = ax2.hlines(y=570, xmin=datetime(2023,10,13), xmax=datetime(2024,4,12), color='k')
+    dep2_apr_24 = ax2.hlines(y=570, xmin=datetime(2024,4,12), xmax=datetime(2024,8,9), color='k')
+    dep2_oct_24 = ax2.hlines(y=570, xmin=datetime(2024,10,21), xmax=datetime(2024,12,4), color='k')
+    dep2_mar_25 = ax2.hlines(y=570, xmin=datetime(2025,3,21), xmax=datetime(2025,11,11), color='k')
+    dep2_nov_25 = ax2.hlines(y=570, xmin=datetime(2025,11,11), xmax=datetime(2026,2,25), color='k')
+    dep2_mar_26 = ax2.hlines(y=570, xmin=datetime(2026,3,14), xmax=datetime(2026,8,27), color='k')
+    dep2_sep_26 = ax2.hlines(y=570, xmin=datetime(2026,9,18), xmax=datetime.now(), color='k')
 
     ax2.clabel(lines2, lines2.levels, inline=True, fontsize=10)
     ax2.invert_yaxis()
     ax2.set_yticks((0, 200, 400, 600))
     ax2.set_ylim(600, 0)
     ax2.set_xlim(time.min(), time.max() + pd.Timedelta(30, unit='D'))
-    ax2.set_xlabel('Time')
-    ax2.set_ylabel('Depth (m)')
+    ax2.set_xlabel('Time', fontsize='large')
+    ax2.set_ylabel('Depth (m)', fontsize='large')
     ax2.spines[:].set_linewidth(2)
-    ax2.tick_params(width=2, top=True, right=True, direction='in')
-    ax2.text(0.15, 0.05, f'Latest transect date: {latest_transect_time.strftime("%Y-%m-%d")}', fontsize='large', transform=ax2.transAxes, ha='center', va='center')
-    cbar2 = fig.colorbar(plot2, ax=ax2, pad=0.02, shrink=0.5)
+    ax2.tick_params(width=4, top=True, right=True, direction='in', labelsize=12)
+    cbar2 = fig.colorbar(plot2, ax=ax2, pad=0.02, shrink=0.75)
     cbar2.outline.set_linewidth(2)
     cbar2.set_label(label=r'(PSU)', rotation=0, labelpad=10)
 
-    fig.set_constrained_layout_pads(w_pad=0.02, h_pad=0.02, wspace=0.02, hspace=0.02)
+    fig.suptitle(
+        f'Temperature (top) and salinity (bottom) anomalies off Trinidad Head, California\nAveraged over 200 km from the coast',
+        fontsize='xx-large',
+    )
+
+    fig.text(0.8, 0.015, f'Latest transect date: {latest_transect_time.strftime("%Y-%m-%d")}', fontsize='small')
+    fig.text(0.025, 0.015, f'Courtesy of the Oregon State University Glider Research Group, NANOOS, CeNCOOS', fontsize='small')
+
+    fig.get_layout_engine().set(
+        w_pad=0.15,    # Horizontal padding in inches
+        h_pad=0.15,    # Vertical padding in inches
+        wspace=0.05,  # 5% width spacing between columns
+        hspace=0.01,   # Reduce spacing between stacked subplots
+    )
+
+
     plt.savefig(os.path.join(figures_directory, f't_anom_timeseries_{timestamp}.png'))
     print(f'Figure saved to "{figures_directory}t_anom_timeseries_{timestamp}.png"\n')
 
@@ -102,7 +158,7 @@ def main():
     # Data Access Here: https://spraydata.ucsd.edu/products/socal-index/
 
     with xr.open_dataset(
-        r'C:/Users/marqjace/data/seaglider/TH_line/scti_oni/socal_index_monthly_v1_8571_f367_229e_U1775096500523.nc',
+        r'C:/Users/marqjace/data/seaglider/TH_line/scti_oni/socal_index_monthly_v1_8571_f367_229e_U1788907474988.nc',
         decode_times=True
     ) as dat:
         scti = dat['scti']
@@ -197,7 +253,7 @@ def main():
 
     plt.grid(alpha=0.8, which='major', axis='y')
     plt.title('California Temperature Anomaly Indices', pad=15, fontsize='xx-large')
-    fig.text(0.8, 0.025, f'Last Updated: {timestamp_print}', fontsize='large')
+    fig.text(0.8, 0.025, f'Latest Data: {thi_time.max().strftime("%Y-%m-%d")}', fontsize='large')
     fig.subplots_adjust(bottom=0.15)
 
     plt.savefig(
@@ -268,7 +324,7 @@ def main():
 
     plt.grid(alpha=0.8, which='major', axis='y')
     plt.title('California Temperature Anomaly Indices', pad=15, fontsize='xx-large')
-    fig.text(0.8, 0.025, f'Last Updated: {timestamp_print}', fontsize='large')
+    fig.text(0.8, 0.025, f'Latest Data: {thi_time.max().strftime("%Y-%m-%d")}', fontsize='large')
     fig.subplots_adjust(bottom=0.15)
 
     plt.savefig(

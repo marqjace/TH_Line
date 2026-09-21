@@ -1,4 +1,5 @@
 import os
+import argparse
 import pandas as pd
 import xarray as xr
 import numpy as np
@@ -8,6 +9,13 @@ from utils import woa_temp, woa_salt, anomaly
 from utils.transects_func import process_transects
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+# Constants
+DEPTH_MAX = 1000
+DEPTH_BINS = 200
+DEPTH_GRID_STEP = 5
+TIME_FREQ = '30D'
+SURFACE_LAYERS = [-10, -5]
 
 filepaths = [
 
@@ -179,195 +187,264 @@ filepaths = [
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect1/3_26_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect2/4_26_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect3/5_26_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect4/5_26_b_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect5/6_26_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect6/7_26_a_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect7/7_26_b_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect8/7_26_c_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect9/8_26_a_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect10/8_26_b_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/sep_2026/transect1/9_26_a_merged.nc',
 ]
 
-def main():
+
+def compute_mean_depth_profile(anomaly_dict):
+    """
+    Compute mean depth profile for each transect from anomaly data.
+    
+    Parameters
+    ----------
+    anomaly_dict : dict
+        Dictionary with transect names as keys and anomaly data as values
+        
+    Returns
+    -------
+    dict
+        Dictionary with transect names as keys and profile/mean_time as values
+    """
+    print('Creating a mean depth profile for each transect...')
+    profiles = {}
+    for transect, data in anomaly_dict.items():
+        # Get the appropriate key ('temp_anomaly' or 'salt_anomaly')
+        anomaly_key = [k for k in data.keys() if k.endswith('_anomaly')][0]
+        profiles[transect] = {
+            "profile": np.nanmean(data[anomaly_key], axis=1),
+            "mean_time": data['mean_time'],
+        }
+    return profiles
+
+
+def create_interpolated_grid(profile_dict):
+    """
+    Create an interpolated grid from profile data.
+    
+    Parameters
+    ----------
+    profile_dict : dict
+        Dictionary containing profile and mean_time for each transect
+        
+    Returns
+    -------
+    tuple
+        (pd.DataFrame, pd.DatetimeIndex) - Interpolated grid and time_grid
+    """
+    # Define depth array for profiles
+    depth = np.linspace(0, DEPTH_MAX, DEPTH_BINS)
+    
+    # Get time range
+    min_time = min(v["mean_time"] for v in profile_dict.values())
+    max_time = max(v["mean_time"] for v in profile_dict.values())
+
+    # Create time vs depth grid for interpolation.
+    # Preserve the true latest transect date even when it does not fall on the
+    # fixed 30-day spacing used for the interpolated grid.
+    time_grid = pd.date_range(start=min_time, end=max_time, freq=TIME_FREQ)
+    max_time = pd.Timestamp(max_time)
+    if len(time_grid) == 0 or time_grid[-1] < max_time:
+        time_grid = time_grid.union(pd.DatetimeIndex([max_time]))
+
+    depth_grid = np.arange(0, DEPTH_MAX, DEPTH_GRID_STEP)
+    Tgrid, Zgrid = np.meshgrid(time_grid, depth_grid)
+
+    # Pre-allocate arrays for better performance
+    n_profiles = len(profile_dict)
+    n_points = n_profiles * len(depth)
+    
+    times_array = np.empty(n_points, dtype='datetime64[ns]')
+    depths_array = np.empty(n_points, dtype=float)
+    values_array = np.empty(n_points, dtype=float)
+    
+    # Fill arrays efficiently
+    idx = 0
+    for v in profile_dict.values():
+        t = v["mean_time"]
+        profile = v["profile"]
+        n = len(profile)
+        times_array[idx:idx+n] = np.datetime64(t)
+        depths_array[idx:idx+n] = depth
+        values_array[idx:idx+n] = profile
+        idx += n
+
+    # Convert to numeric for griddata
+    times_numeric = (times_array - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 'D')
+    Tgrid_numeric = (Tgrid - np.datetime64('1970-01-01')) / np.timedelta64(1, 'D')
+
+    # Linear interpolation onto grid
+    grid_interpolated = griddata(
+        points=(times_numeric, depths_array),
+        values=values_array,
+        xi=(Tgrid_numeric, Zgrid),
+        method='linear'
+    )
+
+    # Add surface layers
+    surface = grid_interpolated[0, :]
+    grid_with_surface = np.vstack([surface.copy(), surface.copy(), grid_interpolated])
+    
+    # Replace surface with 5m values
+    grid_with_surface[2, :] = grid_with_surface[3, :]
+    
+    # Extend depth grid with surface layers
+    depth_grid_extended = np.concatenate((SURFACE_LAYERS, depth_grid))
+
+    # Convert to DataFrame
+    return pd.DataFrame(grid_with_surface, index=depth_grid_extended), time_grid
+
+
+def process_anomaly_data(transects, woa_months, anomaly_func):
+    """
+    Process transect data to create interpolated anomaly grid.
+    
+    Parameters
+    ----------
+    transects : dict
+        Dictionary of transect data
+    woa_months : dict
+        Dictionary of WOA monthly climatology data
+    anomaly_func : callable
+        Function to calculate anomaly (temperature_anomaly or salinity_anomaly)
+        
+    Returns
+    -------
+    tuple
+        (pd.DataFrame, pd.DatetimeIndex) - Interpolated grid and time_grid
+    """
+    # Calculate anomaly
+    anomaly_dict = anomaly_func(transects, woa_months)
+    
+    # Compute mean depth profiles
+    profile_dict = compute_mean_depth_profile(anomaly_dict)
+    
+    # Create interpolated grid and return time_grid
+    grid, time_grid = create_interpolated_grid(profile_dict)
+    
+    return grid, time_grid
+
+
+def get_processed_filepaths(output_file):
+    """
+    Load list of previously processed filepaths from existing netCDF file.
+    
+    Parameters
+    ----------
+    output_file : str
+        Path to the output netCDF file
+        
+    Returns
+    -------
+    set
+        Set of processed filepaths, or empty set if file doesn't exist
+    """
+    if not os.path.exists(output_file):
+        return set()
+    
+    try:
+        ds = xr.open_dataset(output_file)
+        if 'processed_filepaths' in ds.attrs:
+            # Split by delimiter and return as set
+            processed = set(ds.attrs['processed_filepaths'].split('||'))
+            ds.close()
+            return processed
+        ds.close()
+    except Exception as e:
+        print(f"Warning: Could not read processed filepaths from {output_file}: {e}")
+    
+    return set()
+
+
+def find_new_filepaths(all_filepaths, processed_filepaths):
+    """
+    Find filepaths that haven't been processed yet.
+    
+    Parameters
+    ----------
+    all_filepaths : list
+        List of all filepaths to potentially process
+    processed_filepaths : set
+        Set of already processed filepaths
+        
+    Returns
+    -------
+    list
+        List of new filepaths that need processing
+    """
+    return [fp for fp in all_filepaths if fp not in processed_filepaths]
+
+
+def main(force_rebuild=False):
+    # Define output file path
+    data_path = r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\Repositories\TH_Line\timeseries\data'
+    if not os.path.isdir(data_path):
+        os.makedirs(data_path)
+    output_file = os.path.join(data_path, 'timeseries_anomaly.nc')
+    
+    # Check for previously processed filepaths
+    processed_filepaths = get_processed_filepaths(output_file)
+    new_filepaths = find_new_filepaths(filepaths, processed_filepaths)
+    
+    if not new_filepaths and processed_filepaths and not force_rebuild:
+        print(f"No new transects to process. Output file is up to date: {output_file}")
+        print(f"Total transects already processed: {len(processed_filepaths)}")
+        return
+    
+    if new_filepaths:
+        print(f"Found {len(new_filepaths)} new transects to process:")
+        for fp in new_filepaths[:5]:  # Show first 5
+            print(f"  - {os.path.basename(fp)}")
+        if len(new_filepaths) > 5:
+            print(f"  ... and {len(new_filepaths) - 5} more")
+    
+    if force_rebuild and processed_filepaths:
+        print("Force rebuild requested. Reprocessing all transects...")
+
+    # Process all transects (including previously processed ones for consistent interpolation)
+    print(f"\nProcessing all {len(filepaths)} transects to create consistent interpolated grid...")
     results, temp_transects, salt_transects = process_transects(filepaths)
 
-    #################### Temperature Anomaly Calculation ##################
+    # Define WOA dictionaries
     woa_temp_months = {
-        '1': woa_temp.woa_temp_jan,
-        '2': woa_temp.woa_temp_feb,
-        '3': woa_temp.woa_temp_mar,
-        '4': woa_temp.woa_temp_apr,
-        '5': woa_temp.woa_temp_may,
-        '6': woa_temp.woa_temp_jun,
-        '7': woa_temp.woa_temp_jul,
-        '8': woa_temp.woa_temp_aug,
-        '9': woa_temp.woa_temp_sep,
-        '10': woa_temp.woa_temp_oct,
-        '11': woa_temp.woa_temp_nov,
-        '12': woa_temp.woa_temp_dec
+        '1': woa_temp.woa_temp_jan, '2': woa_temp.woa_temp_feb,
+        '3': woa_temp.woa_temp_mar, '4': woa_temp.woa_temp_apr,
+        '5': woa_temp.woa_temp_may, '6': woa_temp.woa_temp_jun,
+        '7': woa_temp.woa_temp_jul, '8': woa_temp.woa_temp_aug,
+        '9': woa_temp.woa_temp_sep, '10': woa_temp.woa_temp_oct,
+        '11': woa_temp.woa_temp_nov, '12': woa_temp.woa_temp_dec
     }
-
-    temp_anom = anomaly.temperature_anomaly(temp_transects, woa_temp_months)
-    
-    print('Creating a mean depth profile for each transect...')
-    for transect, data in temp_anom.items():
-        temp_anom[transect] = {
-            "profile": np.nanmean(data['temp_anomaly'], axis=1),   # Creates a profile of the mean temperature anomaly values across depth
-            "mean_time": data['mean_time'],
-        }
-
-    depth = np.linspace(0,1000,200)
-    min_time = min(v["mean_time"] for v in temp_anom.values())
-    max_time = max(v["mean_time"] for v in temp_anom.values())
-
-    # Create time vs depth grid for interpolation
-    time_grid = pd.date_range(
-        start=min_time,
-        end=max_time,
-        freq='30D'
-    )
-    depth_grid = np.arange(0, 1000, 5) # Depth grid: every 5 m
-    Tgrid, Zgrid = np.meshgrid(time_grid, depth_grid) # Meshgrid
-
-    times_temp = []
-    depths_temp = []
-    values_temp = []
-
-    for v in temp_anom.values():
-        t = v["mean_time"]
-        profile = v["profile"]
-        times_temp.extend([t] * len(profile))
-        depths_temp.extend(depth)
-        values_temp.extend(profile)
-
-    # Convert to numpy.datetime64
-    times_Temp = np.array([np.datetime64(t) for t in times_temp])
-    depths_Temp = np.array(depths_temp)
-    values_Temp = np.array(values_temp)
-
-    # Numeric times for griddata
-    times_numeric_Temp = (times_Temp - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 'D')
-    Tgrid_numeric_Temp = (Tgrid - np.datetime64('1970-01-01')) / np.timedelta64(1, 'D')
-    Zgrid_numeric_Temp = Zgrid.astype(float)
-
-    # Linear interpolation onto grid
-    tanom_grid = griddata(
-        points=(times_numeric_Temp, depths_Temp),
-        values=values_Temp,
-        xi=(Tgrid_numeric_Temp, Zgrid),
-        method='linear'
-    )
-
-    # Pull out surface values
-    surface = tanom_grid[0, :]
-
-    # Create artificial layers at -5m and -10m depth
-    surface_5m = surface.copy()
-    surface_10m = surface.copy()
-
-    # Stack above surface
-    tanom_np = np.vstack([
-        surface_10m,
-        surface_5m,
-        tanom_grid
-    ])
-
-    # Extend depth grid
-    depth_grid_extended = np.concatenate(([-10, -5], depth_grid))
-
-    # Replace surface with 5 m values
-    tanom_np[2, :] = tanom_np[3, :]
-
-    # Convert to Pandas DataFrame for rolling filters
-    tanom_grid = pd.DataFrame(tanom_np, index=depth_grid_extended)
-
-
-    ###################### Salinity Anomaly Calculations ##################
 
     woa_salt_months = {
-        '1': woa_salt.woa_salt_jan,
-        '2': woa_salt.woa_salt_feb,
-        '3': woa_salt.woa_salt_mar,
-        '4': woa_salt.woa_salt_apr,
-        '5': woa_salt.woa_salt_may,
-        '6': woa_salt.woa_salt_jun,
-        '7': woa_salt.woa_salt_jul,
-        '8': woa_salt.woa_salt_aug,
-        '9': woa_salt.woa_salt_sep,
-        '10': woa_salt.woa_salt_oct,
-        '11': woa_salt.woa_salt_nov,
-        '12': woa_salt.woa_salt_dec
+        '1': woa_salt.woa_salt_jan, '2': woa_salt.woa_salt_feb,
+        '3': woa_salt.woa_salt_mar, '4': woa_salt.woa_salt_apr,
+        '5': woa_salt.woa_salt_may, '6': woa_salt.woa_salt_jun,
+        '7': woa_salt.woa_salt_jul, '8': woa_salt.woa_salt_aug,
+        '9': woa_salt.woa_salt_sep, '10': woa_salt.woa_salt_oct,
+        '11': woa_salt.woa_salt_nov, '12': woa_salt.woa_salt_dec
     }
 
-    salt_anom = anomaly.salinity_anomaly(salt_transects, woa_salt_months)
-    
-    print('Creating a mean depth profile for each transect...')
-    for transect, data in salt_anom.items():
-        salt_anom[transect] = {
-            "profile": np.nanmean(data['salt_anomaly'], axis=1),   # Creates a profile of the mean salinity anomaly values across depth
-            "mean_time": data['mean_time'],
-        }
-
-    depth = np.linspace(0,1000,200)
-    min_time = min(v["mean_time"] for v in salt_anom.values())
-    max_time = max(v["mean_time"] for v in salt_anom.values())
-
-    # Create time vs depth grid for interpolation
-    time_grid = pd.date_range(
-        start=min_time,
-        end=max_time,
-        freq='30D'
-    )
-    depth_grid = np.arange(0, 1000, 5) # Depth grid: every 5 m
-    Tgrid, Zgrid = np.meshgrid(time_grid, depth_grid) # Meshgrid
-
-    times_temp = []
-    depths_temp = []
-    values_temp = []
-
-    for v in salt_anom.values():
-        t = v["mean_time"]
-        profile = v["profile"]
-        times_temp.extend([t] * len(profile))
-        depths_temp.extend(depth)
-        values_temp.extend(profile)
-
-    # Convert to numpy.datetime64
-    times_Salt = np.array([np.datetime64(t) for t in times_temp])
-    depths_Salt = np.array(depths_temp)
-    values_Salt = np.array(values_temp)
-
-    # Numeric times for griddata
-    times_numeric_Salt = (times_Salt - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 'D')
-    Tgrid_numeric_Salt = (Tgrid - np.datetime64('1970-01-01')) / np.timedelta64(1, 'D')
-    Zgrid_numeric_Salt = Zgrid.astype(float)
-
-    # Linear interpolation onto grid
-    sanom_grid = griddata(
-        points=(times_numeric_Salt, depths_Salt),
-        values=values_Salt,
-        xi=(Tgrid_numeric_Salt, Zgrid_numeric_Salt),
-        method='linear'
+    # Process temperature anomaly
+    print('Processing temperature anomaly...')
+    tanom_grid, time_grid = process_anomaly_data(
+        temp_transects, 
+        woa_temp_months, 
+        anomaly.temperature_anomaly
     )
 
-    # Pull out surface values
-    surface = sanom_grid[0, :]
-
-    # Create artificial layers at -5m and -10m depth
-    surface_5m = surface.copy()
-    surface_10m = surface.copy()
-
-    # Stack above surface
-    sanom_np = np.vstack([
-        surface_10m,
-        surface_5m,
-        sanom_grid
-    ])
-
-    # Extend depth grid
-    depth_grid_extended = np.concatenate(([-10, -5], depth_grid))
-
-    # Replace surface with 5 m values
-    sanom_np[2, :] = sanom_np[3, :]
-
-    # Convert to Pandas DataFrame for rolling filters
-    sanom_grid = pd.DataFrame(sanom_np, index=depth_grid_extended)
-
-
-    ############### Save as xarray Dataset #################
+    # Process salinity anomaly
+    print('Processing salinity anomaly...')
+    sanom_grid, _ = process_anomaly_data(
+        salt_transects, 
+        woa_salt_months, 
+        anomaly.salinity_anomaly
+    )
 
     # Create xarray Dataset
     anom_ds = xr.Dataset(
@@ -411,18 +488,27 @@ def main():
             'source': 'Oregon State University Glider Research Group',
             'created_on': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'contact': 'Jace Marquardt (jace.marquardt@oregonstate.edu)',
-            'references': 'World Ocean Atlas 2018 Temperature Data'
+            'references': 'World Ocean Atlas 2018 Temperature Data',
+            'processed_filepaths': '||'.join(filepaths),  # Store processed filepaths
+            'num_transects': len(filepaths)
         }
     )
 
-    data_path = r'C:\Users\marqjace\OneDrive - Oregon State University\Desktop\Repositories\TH_Line\timeseries\data'
-    if not os.path.isdir(data_path):
-        os.makedirs(data_path)
-    output_file = os.path.join(data_path, 'timeseries_anomaly.nc')
+    # Save to file
     anom_ds.to_netcdf(output_file)
 
-    print(f"Saved temperature anomaly grid to {output_file}")
+    print(f"\nSaved anomaly grids to {output_file}")
+    print(f"Total transects processed: {len(filepaths)}")
+    if new_filepaths:
+        print(f"New transects added: {len(new_filepaths)}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Rebuild the output netCDF even when no new transects are detected.",
+    )
+    args = parser.parse_args()
+    main(force_rebuild=args.force)
