@@ -1,3 +1,7 @@
+# Script to create a timeseries netCDF file from all Seaglider TH Line temperature and salinity anomaly transect data
+# Created by Jace Marquardt
+# Last updated: 10-14-2026
+
 import os
 import argparse
 import pandas as pd
@@ -194,7 +198,11 @@ filepaths = [
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect8/7_26_c_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect9/8_26_a_merged.nc',
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/mar_2026/transect10/8_26_b_merged.nc',
+
+    # Sep 2026 Deployment
     r'C:/Users/marqjace/data/seaglider/TH_line/deployments/sep_2026/transect1/9_26_a_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/sep_2026/transect2/9_26_b_merged.nc',
+    r'C:/Users/marqjace/data/seaglider/TH_line/deployments/sep_2026/transect3/10_26_merged.nc',
 ]
 
 
